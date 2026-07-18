@@ -1,175 +1,86 @@
 import java.sql.*;
-import java.util.Scanner;
 
 public class EmployeeManagement {
 
-    static final String URL = "jdbc:mysql://localhost:3306/company";
-    static final String USER = "javauser";
-    static final String PASSWORD = "Java@12345";
-
     public static void main(String[] args) {
 
-        Connection con = null;
-        Statement st = null;
-        Scanner sc = new Scanner(System.in);
+        String url = "jdbc:mysql://localhost:3306/company";
+        String user = "javauser";
+        String password = "Java@12345";
 
         try {
 
-            // Connect to MySQL
-            con = DriverManager.getConnection(URL, USER, PASSWORD);
+            // Load MySQL JDBC Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
 
-            // Create Statement object
-            st = con.createStatement();
+            // Establish Connection
+            Connection con = DriverManager.getConnection(url, user, password);
+            Statement stmt = con.createStatement();
 
-           System.out.println("Connected Successfully!");
+            // Create Employee Table
+            String createTable = "CREATE TABLE IF NOT EXISTS employee ("
+                    + "id INT PRIMARY KEY, "
+                    + "name VARCHAR(50), "
+                    + "salary DOUBLE)";
 
-while(true){
+            stmt.executeUpdate(createTable);
+            System.out.println("Employee table created successfully.");
 
-    System.out.println("\n===== Employee Management =====");
+            // Insert Initial Records
+            stmt.executeUpdate("INSERT INTO employee VALUES (101, 'Ravi', 35000)");
+            stmt.executeUpdate("INSERT INTO employee VALUES (102, 'Sita', 42000)");
+            stmt.executeUpdate("INSERT INTO employee VALUES (103, 'Kiran', 50000)");
 
-    System.out.println("1. Create Table");
-    System.out.println("2. Insert");
-    System.out.println("3. Display");
-    System.out.println("4. Update");
-    System.out.println("5. Delete");
-    System.out.println("6. Exit");
+            System.out.println("Initial records inserted successfully.");
 
-    System.out.print("Enter Choice : ");
+            // Display Records
+            System.out.println("\nInitial Employee Records:");
+            displayRecords(stmt);
 
-    int choice = sc.nextInt();
+            // Insert Two More Records
+            stmt.executeUpdate("INSERT INTO employee VALUES (104, 'Meena', 45000)");
+            stmt.executeUpdate("INSERT INTO employee VALUES (105, 'Ramesh', 55000)");
 
-    switch(choice){
+            System.out.println("\nTwo new employee records inserted.");
 
-        case 1:
+            // Update Employee Salary
+            stmt.executeUpdate("UPDATE employee SET salary = 60000 WHERE id = 102");
+            System.out.println("Employee record updated.");
 
-    String createTable =
-        "CREATE TABLE IF NOT EXISTS employee(" +
-        "id INT PRIMARY KEY," +
-        "name VARCHAR(50)," +
-        "salary DOUBLE)";
+            // Delete Employee Record
+            stmt.executeUpdate("DELETE FROM employee WHERE id = 103");
+            System.out.println("Employee record deleted.");
 
-    st.executeUpdate(createTable);
+            // Display Final Records
+            System.out.println("\nFinal Employee Records:");
+            displayRecords(stmt);
 
-    System.out.println("Table Created Successfully");
-
-    break;
-        case 2:
-
-    System.out.print("Enter ID : ");
-    int id = sc.nextInt();
-
-    sc.nextLine();
-
-    System.out.print("Enter Name : ");
-    String name = sc.nextLine();
-
-    System.out.print("Enter Salary : ");
-    double salary = sc.nextDouble();
-
-    String insert =
-        "INSERT INTO employee VALUES(?,?,?)";
-
-    PreparedStatement ps =
-        con.prepareStatement(insert);
-
-    ps.setInt(1,id);
-    ps.setString(2,name);
-    ps.setDouble(3,salary);
-
-    ps.executeUpdate();
-
-    System.out.println("Record Inserted Successfully");
-
-    break;
-        case 3:
-
-    ResultSet rs =
-        st.executeQuery("SELECT * FROM employee");
-
-    System.out.println();
-
-    System.out.println("ID\tNAME\tSALARY");
-
-    while(rs.next()){
-
-        System.out.println(
-            rs.getInt("id") + "\t" +
-            rs.getString("name") + "\t" +
-            rs.getDouble("salary")
-        );
-
-    }
-
-    rs.close();
-
-    break;
-        case 4:
-
-    System.out.print("Enter Employee ID: ");
-    id = sc.nextInt();
-
-    System.out.print("Enter New Salary: ");
-    salary = sc.nextDouble();
-
-    String update =
-        "UPDATE employee SET salary=? WHERE id=?";
-
-    PreparedStatement ps2 =
-        con.prepareStatement(update);
-
-    ps2.setDouble(1, salary);
-    ps2.setInt(2, id);
-
-    count = ps2.executeUpdate();
-
-    if(count > 0)
-        System.out.println("Record Updated Successfully");
-    else
-        System.out.println("Employee Not Found");
-
-    ps2.close();
-
-    break;
-        case 5:
-
-    System.out.print("Enter Employee ID: ");
-    id = sc.nextInt();
-
-    String delete =
-        "DELETE FROM employee WHERE id=?";
-
-    PreparedStatement ps3 =
-        con.prepareStatement(delete);
-
-    ps3.setInt(1, id);
-
-    count = ps3.executeUpdate();
-
-    if(count > 0)
-        System.out.println("Record Deleted Successfully");
-    else
-        System.out.println("Employee Not Found");
-
-    ps3.close();
-
-    break;
-        case 6:
-
+            // Close Connection
             con.close();
-            sc.close();
 
-            System.out.println("Application Closed");
-
-            System.exit(0);
-
-        default:
-            System.out.println("Invalid Choice");
-    }
-
-}
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    // Method to Display Employee Records
+    public static void displayRecords(Statement stmt) throws SQLException {
+
+        ResultSet rs = stmt.executeQuery("SELECT * FROM employee");
+
+        System.out.println("-------------------------------------");
+        System.out.println("ID\tNAME\tSALARY");
+        System.out.println("-------------------------------------");
+
+        while (rs.next()) {
+
+            int id = rs.getInt("id");
+            String name = rs.getString("name");
+            double salary = rs.getDouble("salary");
+
+            System.out.println(id + "\t" + name + "\t" + salary);
+        }
+
+        rs.close();
     }
 }
